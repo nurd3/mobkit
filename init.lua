@@ -167,7 +167,8 @@ function mobkit.get_hitbox_bottom(self)
 			{x=pos.x+self.collisionbox[4],y=pos.y+y,z=pos.z+self.collisionbox[6]},
 		}
 end
-		
+
+-- Use collision box for node height if available (MrRar)
 function mobkit.get_node_height(pos)
 	local npos = mobkit.get_node_pos(pos)
 	local node = mobkit.nodeatpos(npos)
@@ -175,15 +176,16 @@ function mobkit.get_node_height(pos)
 	
 	if node.walkable then
 		if node.drawtype == 'nodebox' then
-			if node.node_box and node.node_box.type == 'fixed' then
-				if type(node.node_box.fixed[1]) == 'number' then
-					return npos.y + node.node_box.fixed[5] ,0, false
-				elseif type(node.node_box.fixed[1]) == 'table' then
-					return npos.y + node.node_box.fixed[1][5] ,0, false
+			local collision_box = node.collision_box or node.node_box
+			if collision_box and collision_box.type == 'fixed' then
+				if type(collision_box.fixed[1]) == 'number' then
+					return npos.y + collision_box.fixed[5], 0, false
+				elseif type(collision_box.fixed[1]) == 'table' then
+					return npos.y + collision_box.fixed[1][5], 0, false
 				else
 					return npos.y + 0.5,1, false			-- todo handle table of boxes
 				end		
-			elseif node.node_box and node.node_box.type == 'leveled' then
+			elseif collision_box and collision_box.type == 'leveled' then
 				return minetest.get_node_level(pos)/64-0.5+mobkit.get_node_pos(pos).y, 0, false
 			else
 				return npos.y + 0.5,1, false	-- the unforeseen
@@ -197,6 +199,7 @@ function mobkit.get_node_height(pos)
 		return npos.y-0.5,-1,liquidflag	
 	end
 end
+
 
 -- get_terrain_height
 -- steps(optional) number of recursion steps; default=3
